@@ -21,7 +21,7 @@ struct ContentView: View {
             Group {
                 if items.isEmpty {
                     ContentUnavailableView(
-                        "No cars.((((",
+                        "No cars.",
                         systemImage: "tray",
                         description: Text("Tap + to add your first car.")
                     )
