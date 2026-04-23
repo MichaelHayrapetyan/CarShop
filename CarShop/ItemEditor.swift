@@ -34,6 +34,8 @@ struct ItemEditor: View {
                             .resizable()
                             .scaledToFit()
                             .frame(maxHeight: 240)
+                            .transition(.opacity.combined(with: .scale(scale: 0.85)))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                     PhotosPicker(
                         selection: $photoSelection,
@@ -44,8 +46,10 @@ struct ItemEditor: View {
                     }
                     if photoData != nil {
                         Button(role: .destructive) {
-                            photoData = nil
-                            photoSelection = nil
+                            withAnimation(.easeInOut(duration: 0.35)) {
+                                photoData = nil
+                                photoSelection = nil
+                            }
                         } label: {
                             Label("Remove Photo", systemImage: "trash")
                         }
@@ -68,7 +72,9 @@ struct ItemEditor: View {
                 guard let newValue else { return }
                 Task {
                     if let data = try? await newValue.loadTransferable(type: Data.self) {
-                        photoData = data
+                        withAnimation(.easeInOut(duration: 0.35)) {
+                            photoData = data
+                        }
                     }
                 }
             }

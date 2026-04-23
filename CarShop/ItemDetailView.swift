@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct CarDetailView: View {
+struct ItemDetailView: View {
     let item: Item
 
     @State private var isEditing = false

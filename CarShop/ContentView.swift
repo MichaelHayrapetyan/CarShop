@@ -21,15 +21,15 @@ struct ContentView: View {
             Group {
                 if items.isEmpty {
                     ContentUnavailableView(
-                        "No cars.",
+                        "No items.",
                         systemImage: "tray",
-                        description: Text("Tap + to add your first car.")
+                        description: Text("Tap + to add item.")
                     )
                 } else {
                     List {
                         ForEach(items, id: \.persistentModelID) { item in
                             NavigationLink {
-                                CarDetailView(item: item)
+                                ItemDetailView(item: item)
                             } label: {
                                 ItemRow(item: item)
                             }
@@ -45,13 +45,13 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle("Cars")
+            .navigationTitle("Item")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         isAdding = true
                     } label: {
-                        Label("Add car", systemImage: "plus")
+                        Label("Add item", systemImage: "plus")
                     }
                 }
             }
@@ -78,12 +78,11 @@ struct ContentView: View {
                 Button("Cancel", role: .cancel) {
                     pendingDeletion = nil
                 }
-            } message: { _ in
-                Text("Net puti nazad.")
+            }
             }
         }
     }
-}
+
 
 private struct ItemRow: View {
     let item: Item
