@@ -23,19 +23,26 @@ struct ItemEditor: View {
             Form {
                 Section("Name") {
                     TextField("Name", text: $name)
+                        .maxLength(40, for: $name)
                 }
                 Section("Description") {
                     TextField("Description", text: $itemDescription, axis: .vertical)
                         .lineLimit(3...6)
+                        .maxLength(30, for: $itemDescription)
                 }
                 Section("Photo") {
                     if let photoData, let uiImage = UIImage(data: photoData) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxHeight: 240)
-                            .transition(.opacity.combined(with: .scale(scale: 0.85)))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        HStack {
+                            Spacer()
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFit()
+                                .containerRelativeFrame(.horizontal) { width, _ in width * 0.5 }
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .transition(.opacity.combined(with: .scale(scale: 0.85)))
+                            Spacer()
+                        }
+                        .alignmentGuide(.listRowSeparatorLeading) { _ in 40 }
                     }
                     PhotosPicker(
                         selection: $photoSelection,
