@@ -4,6 +4,7 @@ struct ItemDetailView: View {
     let item: Item
 
     @State private var isEditing = false
+    @State private var isDrawing = false
 
     var body: some View {
         ScrollView {
@@ -35,12 +36,20 @@ struct ItemDetailView: View {
         .navigationTitle(item.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            if item.photoData != nil {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Draw") { isDrawing = true }
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button("Edit") { isEditing = true }
             }
         }
         .sheet(isPresented: $isEditing) {
             ItemEditor(mode: .edit(item))
+        }
+        .fullScreenCover(isPresented: $isDrawing) {
+            PhotoDrawView(item: item)
         }
     }
 

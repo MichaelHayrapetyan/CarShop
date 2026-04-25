@@ -16,6 +16,8 @@ struct ContentView: View {
     @State private var editingItem: Item?
     @State private var pendingDeletion: Item?
 
+    @AppStorage("isDarkMode") private var isDarkMode = false
+
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 0) {
@@ -63,6 +65,14 @@ struct ContentView: View {
             }
             .background(Color(.systemGroupedBackground))
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        withAnimation { isDarkMode.toggle() }
+                    } label: {
+                        Image(systemName: isDarkMode ? "sun.max.fill" : "moon.fill")
+                            .contentTransition(.symbolEffect(.replace))
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         isAdding = true
@@ -71,6 +81,7 @@ struct ContentView: View {
                     }
                 }
             }
+            .preferredColorScheme(isDarkMode ? .dark : .light)
             .sheet(isPresented: $isAdding) {
                 ItemEditor(mode: .add)
             }

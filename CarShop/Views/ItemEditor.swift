@@ -23,7 +23,7 @@ struct ItemEditor: View {
             Form {
                 Section("Name") {
                     TextField("Name", text: $name)
-                        .maxLength(40, for: $name)
+                        .maxLength(15, for: $name)
                 }
                 Section("Description") {
                     TextField("Description", text: $itemDescription, axis: .vertical)
