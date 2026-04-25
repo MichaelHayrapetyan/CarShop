@@ -11,13 +11,13 @@ struct ItemDetailView: View {
                 photo
                 VStack(alignment: .leading, spacing: 8) {
                     Text(item.name)
-                        .font(.largeTitle.bold())
+                        .font(.openSansLargeTitle)
                     Label {
                         Text("Added \(item.createdAt, format: .dateTime.year().month().day().hour().minute())")
                     } icon: {
                         Image(systemName: "calendar")
                     }
-                    .font(.subheadline)
+                    .font(.openSansSubheadline)
                     .foregroundStyle(.secondary)
                 }
                 Divider()
@@ -27,7 +27,7 @@ struct ItemDetailView: View {
                         .italic()
                 } else {
                     Text(item.itemDescription)
-                        .font(.body)
+                        .font(.openSansBody)
                 }
             }
             .padding()

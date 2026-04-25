@@ -42,7 +42,11 @@ struct ItemEditor: View {
                                 .transition(.opacity.combined(with: .scale(scale: 0.85)))
                             Spacer()
                         }
-                        .alignmentGuide(.listRowSeparatorLeading) { _ in 40 }
+                        //.listRowSeparator(.hidden)
+                        .alignmentGuide(.listRowSeparatorLeading) { _ in 39 }
+                        //SeparatorLine()
+                            //.listRowSeparator(.hidden)
+
                     }
                     PhotosPicker(
                         selection: $photoSelection,

@@ -18,34 +18,50 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if items.isEmpty {
-                    ContentUnavailableView(
-                        "No items.",
-                        systemImage: "tray",
-                        description: Text("Tap + to add item.")
-                    )
-                } else {
-                    List {
-                        ForEach(items, id: \.persistentModelID) { item in
-                            NavigationLink {
-                                ItemDetailView(item: item)
-                            } label: {
-                                ItemRow(item: item)
-                            }
-                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                    Button {
-                                        pendingDeletion = item
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                    .tint(.red)
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 0) {
+                    Text("Item")
+                    if items.count != 1 {
+                        Text("s")
+                            .transition(.opacity.combined(with: .scale))
+                    }
+                }
+                .font(.openSansLargeTitle)
+                .animation(.easeInOut(duration: 0.25), value: items.count)
+                .padding(.horizontal)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                Group {
+                    if items.isEmpty {
+                        ContentUnavailableView(
+                            "No items.",
+                            systemImage: "tray",
+                            description: Text("Tap + to add item.")
+                        )
+                    } else {
+                        List {
+                            ForEach(items, id: \.persistentModelID) { item in
+                                NavigationLink {
+                                    ItemDetailView(item: item)
+                                } label: {
+                                    ItemRow(item: item)
                                 }
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                        Button {
+                                            pendingDeletion = item
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                        .tint(.red)
+                                    }
+                            }
                         }
                     }
                 }
             }
-            .navigationTitle("Item")
+            .background(Color(.systemGroupedBackground))
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -92,9 +108,9 @@ private struct ItemRow: View {
             thumbnail
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.name)
-                    .font(.headline)
+                    .font(.openSansHeadline)
                 Text(item.createdAt, format: .dateTime.year().month().day().hour().minute())
-                    .font(.caption)
+                    .font(.openSansCaption)
                     .foregroundStyle(.secondary)
             }
         }

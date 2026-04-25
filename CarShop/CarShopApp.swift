@@ -13,6 +13,7 @@ struct CarShopApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.font, .openSansBody)
         }
         .modelContainer(for: Item.self)
     }
