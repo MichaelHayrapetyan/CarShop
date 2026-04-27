@@ -28,7 +28,7 @@ struct ContentView: View {
                             .transition(.opacity.combined(with: .scale))
                     }
                 }
-                .font(.openSansLargeTitle)
+                .font(.spaceGroteskLargeTitle)
                 .animation(.easeInOut(duration: 0.25), value: items.count)
                 .padding(.horizontal)
                 .padding(.top, 8)
@@ -119,9 +119,9 @@ private struct ItemRow: View {
             thumbnail
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.name)
-                    .font(.openSansHeadline)
+                    .font(.spaceGroteskHeadline)
                 Text(item.createdAt, format: .dateTime.year().month().day().hour().minute())
-                    .font(.openSansCaption)
+                    .font(.spaceGroteskCaption)
                     .foregroundStyle(.secondary)
             }
         }

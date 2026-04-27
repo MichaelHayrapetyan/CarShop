@@ -1,118 +1,175 @@
 import SwiftUI
-import SwiftData
+
+struct TextOverlay: Identifiable {
+    let id = UUID()
+    var text: String = ""
+    var offset: CGSize = .zero
+    var fontSize: CGFloat = 32
+    var dragStart: CGSize = .zero
+    var pinchStart: CGFloat = 32
+}
 
 struct PhotoDrawView: View {
     let item: Item
 
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.colorScheme) private var colorScheme
 
-    @State private var text: String = ""
-    @State private var textOffset: CGSize = .zero
-    @State private var dragStart: CGSize = .zero
-    @State private var fontSize: CGFloat = 32
-    @State private var textColor: Color = .white
+    @State private var overlays: [TextOverlay] = []
+    @State private var pending: TextOverlay = TextOverlay()
+    @State private var isPending: Bool = false
+    @FocusState private var textFieldFocused: Bool
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                photoCanvas
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.black)
+            photoCanvas
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.black)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { toolbarContent }
+        }
+    }
 
-                controls
-                    .background(colorScheme == .dark ? Color(white: 0.12) : Color(.systemBackground))
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        if isPending {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { isPending = false }
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .principal) {
-                    Text("Draw")
-                        .font(.openSansHeadline)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }
-                        .disabled(text.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
+            ToolbarItem(placement: .principal) {
+                Text("Draw").font(.spaceGroteskHeadline)
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { commitPending() }
+                    .disabled(pending.text.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+        } else {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
+            }
+            ToolbarItem(placement: .principal) {
+                Text("Draw").font(.spaceGroteskHeadline)
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save") { save() }
+                    .disabled(overlays.isEmpty)
             }
         }
     }
 
-    //Photo
     @ViewBuilder
     private var photoCanvas: some View {
-        ZStack {
-            if let data = item.photoData, let uiImage = UIImage(data: data) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFit()
-            } else {
-                Color.gray.opacity(0.3)
-                    .overlay(
-                        Image(systemName: "photo")
-                            .font(.system(size: 64))
-                            .foregroundStyle(.secondary)
-                    )
-            }
+        GeometryReader { proxy in
+            ZStack {
+                photoImage
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .contentShape(Rectangle())
+                    .onTapGesture { location in
+                        guard !isPending else { return }
+                        let center = CGPoint(x: proxy.size.width / 2, y: proxy.size.height / 2)
+                        let newOffset = CGSize(
+                            width: location.x - center.x,
+                            height: location.y - center.y
+                        )
+                        pending = TextOverlay(
+                            offset: newOffset,
+                            dragStart: newOffset
+                        )
+                        isPending = true
+                        textFieldFocused = true
+                    }
 
-            if !text.isEmpty {
-                overlayText
-                    .offset(textOffset)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                textOffset = CGSize(
-                                    width: dragStart.width + value.translation.width,
-                                    height: dragStart.height + value.translation.height
-                                )
-                            }
-                            .onEnded { _ in
-                                dragStart = textOffset
-                            }
-                    )
-            }
-        }
-    }
+                ForEach(overlays) { overlay in
+                    committedView(for: overlay)
+                }
 
-    private var overlayText: some View {
-        Text(text)
-            .font(.custom("OpenSans-Bold", size: fontSize))
-            .foregroundStyle(textColor)
-            .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 2)
-            .padding(8)
-    }
-
-    
-    //Controls
-    private var controls: some View {
-        VStack(spacing: 12) {
-            TextField("Add text…", text: $text)
-                .font(.openSansBody)
-                .padding(8)
-                .background(colorScheme == .dark ? Color(white: 0.22) : Color(.secondarySystemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-
-            HStack(spacing: 16) {
-                ColorPicker("", selection: $textColor, supportsOpacity: false)
-                    .labelsHidden()
-                    .frame(width: 36, height: 36)
-
-                HStack(spacing: 8) {
-                    Image(systemName: "textformat.size.smaller")
-                        .foregroundStyle(.secondary)
-                    Slider(value: $fontSize, in: 14...96)
-                    Image(systemName: "textformat.size.larger")
-                        .foregroundStyle(.secondary)
+                if isPending {
+                    pendingView(canvasWidth: proxy.size.width)
                 }
             }
         }
-        .padding()
     }
 
-    //Save
+    private func committedView(for overlay: TextOverlay) -> some View {
+        Text(overlay.text)
+            .font(.custom("SpaceGrotesk-Bold", size: overlay.fontSize))
+            .foregroundStyle(.white)
+            .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 2)
+            .padding(8)
+            .offset(overlay.offset)
+            .onTapGesture {
+                guard !isPending, let i = indexOf(overlay) else { return }
+                pending = overlays.remove(at: i)
+                isPending = true
+                textFieldFocused = true
+            }
+    }
+
+    private func pendingView(canvasWidth: CGFloat) -> some View {
+        TextField(
+            "",
+            text: $pending.text,
+            prompt: Text("Add text").foregroundStyle(.white.opacity(0.7))
+        )
+            .font(.custom("SpaceGrotesk-Bold", size: pending.fontSize))
+            .foregroundStyle(.white)
+            .multilineTextAlignment(.center)
+            .focused($textFieldFocused)
+            .submitLabel(.done)
+            .onSubmit { commitPending() }
+            .padding(.horizontal, 8)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .frame(maxWidth: canvasWidth * 0.8)
+            .offset(pending.offset)
+            .simultaneousGesture(
+                DragGesture()
+                    .onChanged { value in
+                        pending.offset = CGSize(
+                            width: pending.dragStart.width + value.translation.width,
+                            height: pending.dragStart.height + value.translation.height
+                        )
+                    }
+                    .onEnded { _ in
+                        pending.dragStart = pending.offset
+                    }
+            )
+            .simultaneousGesture(
+                MagnifyGesture()
+                    .onChanged { value in
+                        pending.fontSize = max(8, min(200, pending.pinchStart * value.magnification))
+                    }
+                    .onEnded { _ in
+                        pending.pinchStart = pending.fontSize
+                    }
+            )
+    }
+
+    @ViewBuilder
+    private var photoImage: some View {
+        if let data = item.photoData, let uiImage = UIImage(data: data) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFit()
+        } else {
+            Color.gray.opacity(0.3)
+                .overlay(
+                    Image(systemName: "photo")
+                        .font(.system(size: 64))
+                        .foregroundStyle(.secondary)
+                )
+        }
+    }
+
+    private func indexOf(_ overlay: TextOverlay) -> Int? {
+        overlays.firstIndex(where: { $0.id == overlay.id })
+    }
+
+    private func commitPending() {
+        if !pending.text.trimmingCharacters(in: .whitespaces).isEmpty {
+            overlays.append(pending)
+        }
+        isPending = false
+    }
+
     @MainActor
     private func save() {
         guard let data = item.photoData,
@@ -122,13 +179,10 @@ struct PhotoDrawView: View {
         }
 
         let rendered = render(baseImage: uiImage)
-        if let jpeg = rendered.jpegData(compressionQuality: 0.9) {
-            item.photoData = jpeg
-        }
+        UIImageWriteToSavedPhotosAlbum(rendered, nil, nil, nil)
         dismiss()
     }
 
-   
     @MainActor
     private func render(baseImage: UIImage) -> UIImage {
         let composition = ZStack {
@@ -136,14 +190,17 @@ struct PhotoDrawView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: baseImage.size.width, height: baseImage.size.height)
-            Text(text)
-                .font(.custom("OpenSans-Bold", size: fontSize * (baseImage.size.height / 600)))
-                .foregroundStyle(textColor)
-                .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 2)
-                .offset(
-                    x: textOffset.width * (baseImage.size.width / 400),
-                    y: textOffset.height * (baseImage.size.height / 600)
-                )
+
+            ForEach(overlays) { overlay in
+                Text(overlay.text)
+                    .font(.custom("SpaceGrotesk-Bold", size: overlay.fontSize * (baseImage.size.height / 600)))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.6), radius: 4, x: 0, y: 2)
+                    .offset(
+                        x: overlay.offset.width * (baseImage.size.width / 400),
+                        y: overlay.offset.height * (baseImage.size.height / 600)
+                    )
+            }
         }
         .frame(width: baseImage.size.width, height: baseImage.size.height)
 

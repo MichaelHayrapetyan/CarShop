@@ -12,13 +12,13 @@ struct ItemDetailView: View {
                 photo
                 VStack(alignment: .leading, spacing: 8) {
                     Text(item.name)
-                        .font(.openSansLargeTitle)
+                        .font(.spaceGroteskLargeTitle)
                     Label {
                         Text("Added \(item.createdAt, format: .dateTime.year().month().day().hour().minute())")
                     } icon: {
                         Image(systemName: "calendar")
                     }
-                    .font(.openSansSubheadline)
+                    .font(.spaceGroteskSubheadline)
                     .foregroundStyle(.secondary)
                 }
                 Divider()
@@ -28,7 +28,30 @@ struct ItemDetailView: View {
                         .italic()
                 } else {
                     Text(item.itemDescription)
-                        .font(.openSansBody)
+                        .font(.spaceGroteskBody)
+                }
+
+                if item.photoData != nil {
+                    Divider()
+                        .padding(.top, 8)
+
+                    HStack {
+                        Spacer()
+                        Button {
+                            isDrawing = true
+                        } label: {
+                            Label("Draw", systemImage: "pencil.tip.crop.circle")
+                                .font(.spaceGroteskHeadline)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 7)
+                        }
+                        .buttonStyle(.glass)
+                        .frame(maxWidth: 150)
+                        .frame(maxHeight: 75)
+                        .controlSize(.regular)
+                        Spacer()
+                    }
+                    .padding(.top, 4)
                 }
             }
             .padding()
@@ -36,11 +59,6 @@ struct ItemDetailView: View {
         .navigationTitle(item.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if item.photoData != nil {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Draw") { isDrawing = true }
-                }
-            }
             ToolbarItem(placement: .primaryAction) {
                 Button("Edit") { isEditing = true }
             }
