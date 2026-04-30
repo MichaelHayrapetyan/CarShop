@@ -58,10 +58,6 @@ struct ItemDetailView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(item.name)
-                    .font(.spaceGroteskHeadline)
-            }
             ToolbarItem(placement: .primaryAction) {
                 Button("Edit") { isEditing = true }
             }
